@@ -1,0 +1,97 @@
+# Instance name
+name: "QuantizationAwareTraining"
+
+# How many GPUs to train/test
+n_gpu: 1
+
+# Random seed
+random_seed: 2333
+
+# Model
+arch:
+<<<<<<< HEAD
+    type: "cifar_efficientnetb0"         # name in `model` package
+    args: {pretrained: false, num_classes: 100, 
+          bn_momentum: 0.9}
+    load_from_pth: "saved/models/Classification/1208_143000/checkpoint-epoch170.pth"      # path to pretrained .pth file
+=======
+    type: "cifar_resnet56"         # name in `model` package
+    args:
+        pretrained: false
+        num_classes: 100
+        option: "A"
+    load_from_pth: "/home/yahei/r56-7200.pth"      # path to pretrained .pth file
+>>>>>>> 3dab29ef6c444994a3a1035684a42034dcd1f44a
+
+# Dataloaders
+dataloaders:
+    train:
+        type: "CIFAR100"    # name in data_loader/data_loaders.py
+        args:
+            data_dir: "E:/data/dataset/CIFAR100"
+            training: true
+            batch_size: 128
+            shuffle: true
+            drop_last: true
+            num_workers: 4
+    test:
+        type: "CIFAR100"    # name in data_loader/data_loaders.py
+        args:
+            data_dir: "E:/data/dataset/CIFAR100"
+            training: false
+            batch_size: 128
+            shuffle: false
+            num_workers: 4
+
+# Options for quantization
+quantization:
+    weight:
+        enable: true
+        type: "LSQ"
+        args:
+            n_bits: 4
+            signed: true
+    input:
+        enable: true
+        type: "LSQ"
+        args:
+            n_bits: 4
+            signed: false
+    exclude_layers: []           # name of layers to exclude (with fp32 precision), regular expression supported
+    override_options:            # override options for some specified layers
+        - layers: ["stage1.0.conv", "FC"]    # name of layers to override options, regular expression supported
+          options:
+              weight: {args: {n_bits: 8}}
+              input: {args: {n_bits: 8}}
+
+# Options for training
+optimizer:
+    type: "SGD"               # name in torch.optim
+    args:
+        nesterov: true
+        lr: 0.01
+        weight_decay: 1e-4
+        momentum: 0.9
+loss: "cross_entropy_loss"               # name in trainer/loss
+metrics:                       # name in trainer/metrics
+    - "accuracy"
+    - "top5_acc"
+lr_scheduler:
+    type: "MultiStepLR"            # name in torch.optim.lr_scheduler
+    args:
+        milestones: [60]
+        gamma: 0.1
+        warmup: 400
+trainer:
+    epochs: 100
+    save_dir: "saved/"
+    save_period: 10
+    verbosity: 2
+    train_log_density: 3
+    valid_log_density: 1
+    monitor: "max val_accuracy"
+    early_stop: 100
+    tensorboard: false
+    save_to_disk: true
+    update_qparams_period: 1000     # step period to update quantized params(scales and offsets)
+    freeze_bn: false                 # if True, statistics parameters of BN layers will be frozen

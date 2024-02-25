@@ -1,0 +1,87 @@
+name: "mbv2"
+
+n_gpu: 2
+
+random_seed: 2333
+
+arch:
+    type: "mobilenet_v2"         # name in `model` package
+    args:
+        num_classes: 1000
+        pretrained: True
+    #load_from_pth: saved/models/Classification/1012_204714/model_best-0.7144.pth
+    #load_from_pth: saved/models/Classification/0728_094712/checkpoint-epoch90-0.70376.pth
+
+dataloaders:
+    train:
+        type: "ImageNet"    # name in data_loader/data_loaders.py
+        args:
+            data_dir: "/data/ILSVRC2012/train"
+            training: true
+            batch_size: 192
+            shuffle: true
+            drop_last: true
+            num_workers: 16
+    test:
+        type: "ImageNet"    # name in data_loader/data_loaders.py
+        args:
+            data_dir: "/data/ILSVRC2012/val"
+            training: false
+            batch_size: 512
+            shuffle: false
+            num_workers: 16
+
+quantization:
+    momentum: 0.1
+    weight:
+        enable: true
+        type: 
+        args:
+            n_bits: 4
+            signed: false
+    input:
+        enable: true
+        type: 
+        args:
+            n_bits: 4
+            signed: false
+    exclude_layers: ["features.0.0", "classifier.1"]           # name of layers to exclude (with fp32 precision), regular expression supported
+    #exclude_layers: ["conv1", "fc"]
+    override_options:            # override options for some specified layers
+        - layers: []    # name of layers to override options, regular expression supported
+          options:
+              weight: {args: {n_bits: 8}}
+              input: {args: {n_bits: 8}}
+
+optimizer:
+    type: "SGD"               # name in torch.optim
+    args:
+        nesterov: true
+        lr: 0.02
+        weight_decay: 0
+        momentum: 0.9
+loss: "cross_entropy_loss"               # name in trainer/loss
+metrics:                       # name in trainer/metrics
+    - "accuracy"
+    - "top5_acc"
+
+lr_scheduler:
+    type: "CosineDecayLR"
+    args:
+        total_epochs: 120
+        warmup_steps: 6000
+
+alpha_lr: 1e-4
+grad_clip_param: 0
+
+trainer:
+    epochs: 120
+    save_dir: "saved/"
+    train_log_density: 10
+    valid_log_density: 1
+    save_period: 3
+    verbosity: 2
+    monitor: "max val_accuracy"
+    tensorboard: True
+    save_to_disk: True
+    freeze_bn: false

@@ -1,0 +1,70 @@
+# Instance name
+name: "Classification"
+
+# How many GPUs to train/test
+n_gpu: 1
+
+# Random seed
+random_seed: 2333
+
+# Model
+arch:
+    type: "cifar_efficientnetb0"         # name in `model` package
+    args: {pretrained: false, num_classes: 100, 
+          bn_momentum: 0.9}
+
+# Dataloaders
+dataloaders:
+    train:
+        type: "CIFAR100"    # name in data_loader/data_loaders.py
+        args:
+            data_dir: "/data"
+            training: true
+            batch_size: 384
+            shuffle: true
+            num_workers: 4
+    test:
+        type: "CIFAR100"    # name in data_loader/data_loaders.py
+        args:
+            data_dir: "/data"
+            training: false
+            batch_size: 1024
+            shuffle: false
+            num_workers: 0
+
+# Options for training
+optimizer:
+    type: "SGD"               # name in torch.optim
+    args:
+        #nesterov: true
+        lr: 0.1
+        #eps: 0.001
+        weight_decay: 5e-4
+        momentum: 0.9
+loss: "cross_entropy_loss"               # name in trainer/loss
+metrics:                       # name in trainer/metrics
+    - "accuracy"
+    - "top5_acc"
+lr_scheduler:
+    type: "MultiStepLR"            # name in torch.optim.lr_scheduler
+    args:
+        milestones: [60, 120, 160, 200, 240, 280]
+        gamma: 0.2
+    #type: "StepLR"
+    #args:
+    #    step_size: 2
+    #    gamma: 0.97
+    #type: "CosineAnnealingLR"
+    #args: 
+    #    T_0: 60
+    #    T_mul: 5
+    #    eta_min: 1e-5
+
+trainer:
+    epochs: 320
+    save_dir: "saved/"
+    save_period: 10
+    verbosity: 2
+    monitor: "max val_accuracy"
+    early_stop: 100
+    tensorboard: false

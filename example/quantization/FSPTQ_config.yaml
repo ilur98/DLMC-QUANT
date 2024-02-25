@@ -1,0 +1,101 @@
+# Instance name
+name: "FSPTQ-w3a3"
+
+# How many GPUs to train/test
+n_gpu: 1
+
+# Random seed
+random_seed: 
+
+# Model
+arch:
+    type: "RepVGG_B0"         # name in `model` package
+    args:
+        pretrained: true
+        # num_classes: 1000
+    load_from_pth: "saved/baseline/RepVGG-B0-train.pth"      # path to pretrained .pth file
+
+train_sample_num: 1024
+
+dataloaders:
+    train:
+        type: "ImageNet"    # name in data_loader/data_loaders.py
+        args:
+            data_dir: "H:\\data\\dataset\\ILSVRC2012\\train"
+            training: true
+            batch_size: 128
+            shuffle: true
+            drop_last: true
+            num_workers: 8
+    test:
+        type: "ImageNet"    # name in data_loader/data_loaders.py
+        args:
+            data_dir: "H:\\data\\dataset\\ILSVRC2012\\val"
+            training: false
+            batch_size: 256
+            shuffle: false
+            num_workers: 0
+
+# Options for quantization
+quantization:
+    weight:
+        enable: true
+        type: "minmax_channel"
+        recon_type: None
+        args:
+            n_bits: 8
+            signed: True
+    input:
+        enable: true
+        type: "minmax_tensor"
+        args:
+            n_bits: 8
+            signed: False
+    exclude_layers: []           # name of layers to exclude (with fp32 precision), regular expression supported
+    override_options:            # override options for some specified layers
+        - layers: []
+        #   options:
+        #       weight: {args: {n_bits: 8}}
+        #       input: {args: {n_bits: 8}}
+        # - layers: ["fc"]    # name of layers to override options, regular expression supported
+        #   options:
+        #       weight: {type: "l2loss_tensor", args: {n_bits: 8}}
+        #       input: {args: {n_bits: 8}}
+
+# Options for training
+optimizer:
+    type: "SGD"               # name in torch.optim
+    args:
+        nesterov: true
+        lr: 4e-5 
+        weight_decay: 5e-5
+        momentum: 0.9
+loss: "l2_loss"               # name in trainer/loss
+metrics:                       # name in trainer/metrics
+    - "accuracy"
+    - "top5_acc"
+lr_scheduler:
+    type: "CosineDecayLR"            # name in torch.optim.lr_scheduler
+    args:
+        steps_per_epc: 390
+        total_epochs: 90
+        warmup_steps: 0
+    #type: "MultiStepLR"            # name in torch.optim.lr_scheduler
+    #args:
+    #    milestones: [60, 120, 160]
+    #    gamma: 0.2
+
+grad_clip_param: 0
+trainer:
+    epochs: 0
+    save_dir: "saved/"
+    train_log_density: 3
+    valid_log_density: 3
+    save_period: 1
+    verbosity: 2
+    monitor: "max val_accuracy"
+    #early_stop: 120
+    tensorboard: false
+    save_to_disk: True
+    #update_qparams_period: 1000     # step period to update quantized params(scales and offsets)
+    freeze_bn: false                 # if True, statistics parameters of BN layers will be frozen

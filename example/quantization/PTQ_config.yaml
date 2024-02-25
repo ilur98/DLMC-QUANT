@@ -1,0 +1,73 @@
+# Instance name
+name: "PostTrainingQuantization"
+
+# How many GPUs to train/test
+n_gpu: 1
+
+# Random seed
+random_seed: 2333
+
+# Model
+arch:
+    type: "resnet18"         # name in `model` package
+    args: {pretrained: true}
+
+# Dataloaders
+dataloaders:
+    calibration:
+        type: "ImageNet"    # name in data_loader/data_loaders.py
+        args:
+            data_dir: "E:/data/dataset/ILSVRC2012/val"
+            training: false
+            batch_size: 16
+            shuffle: false
+            num_workers: 1
+            n_samples: 16
+            random_sample: true
+    test:
+        type: "ImageNet"    # name in data_loader/data_loaders.py
+        args:
+            data_dir: "E:/data/dataset/ILSVRC2012/val"
+            training: false
+            batch_size: 128
+            shuffle: false
+            num_workers: 4
+
+# Options for quantization
+quantization:
+    weight:
+        enable: true
+        base: "tensor"
+        type: "l2norm_channel"
+        args:
+            n_bits: 4
+            signed: true
+    input:
+        enable: true
+        type: "l2norm_tensor"
+        args:
+            n_bits: 8
+            signed: true
+    exclude_layers: []     # name of layers to exclude (with fp32 precision), regular expression supported
+    override_options:      # override options for some specified layers
+        - layers: []             # name of layers to override options, regular expression supported
+          options:
+              weight: {args: {n_bits: 10}}
+              input: {args: {n_bits: 10}}
+
+# Options for training
+loss: "cross_entropy_loss"               # name in trainer/loss
+metrics:                       # name in trainer/metrics
+    - "accuracy"
+    - "top5_acc"
+trainer:
+    epoch: 100
+    save_dir: "saved/"
+    save_period: 10
+    verbosity: 2
+    train_log_density: 3
+    valid_log_density: 1
+    monitor: "min val_loss"
+    early_stop: 10
+    tensorboard: true
+    save_to_disk: true

@@ -1,0 +1,79 @@
+# Instance name
+name: "C_resnet56"
+
+# Run ID of the instance
+# run_id: "ResNet20D_ms"
+
+# How many GPUs to train/test
+n_gpu: 1
+
+# Random seed
+random_seed: 2333
+
+# Model
+arch:
+    type: "cifar_resnet56"         # name in `model` package
+    args:
+        pretrained: false
+        num_classes: 100
+
+#arch:
+#    type: "cifar_efficientnetb6"         # name in `model` package
+#    args: {pretrained: false, num_classes: 1000, 
+#          bn_momentum: 0.9}
+
+# Dataloaders
+dataloaders:
+    train:
+        type: "CIFAR100"    # name in data_loader/data_loaders.py
+        args:
+            data_dir: "H:\\data\\dataset\\CIFAR10"
+            training: true
+            batch_size: 256
+            shuffle: true
+            num_workers: 4
+    test:
+        type: "CIFAR100"    # name in data_loader/data_loaders.py
+        args:
+            data_dir: "H:\\data\\dataset\\CIFAR10"
+            training: false
+            batch_size: 500
+            shuffle: false
+            num_workers: 4
+
+# Options for training
+optimizer:
+    type: "SGD"               # name in torch.optim
+    args:
+        nesterov: true
+        lr: 0.2
+        weight_decay: 5e-4
+        momentum: 0.9
+loss: "cross_entropy_loss"               # name in trainer/loss
+metrics:                       # name in trainer/metrics
+    - "accuracy"
+    - "top5_acc"
+lr_scheduler:
+    type: "CosineDecayLR"            # name in scheduler.lr_scheduler
+    args:
+        total_epochs: 200
+        warmup_steps: 780
+    #type: "MultiStepLR"            # name in torch.optim.lr_scheduler
+    #args:
+    #    milestones: [30, 60]
+    #    gamma: 0.1
+
+kurtosis: false
+
+trainer:
+    epochs: 200
+    save_dir: "saved/"
+    save_period: 10
+    verbosity: 2
+    train_log_density: 3
+    valid_log_density: 1
+    monitor: "max val_accuracy"
+    early_stop: 200
+    tensorboard: true
+    save_to_disk: true
+# resume: "saved/models/Classification/1208_213219/checkpoint-epoch5.pth"

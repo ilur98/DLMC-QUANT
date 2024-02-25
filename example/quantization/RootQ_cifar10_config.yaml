@@ -1,0 +1,86 @@
+name: "RootQ_APM"
+
+n_gpu: 1
+
+#random_seed: 2333
+
+arch:
+    type: "cifar_resnet20"         # name in `model` package
+    args:
+        pretrained: false
+        num_classes: 10
+    load_from_pth: "saved/models/Classification/0301_142213/model_best-0.9144.pth"      # path to pretrained .pth file
+
+
+dataloaders:
+    train:
+        type: "CIFAR10"    # name in data_loader/data_loaders.py
+        args:
+            data_dir: "/home/ilur/data/CIFAR10"
+            training: true
+            batch_size: 128
+            shuffle: true
+            num_workers: 8
+    test:
+        type: "CIFAR10"    # name in data_loader/data_loaders.py
+        args:
+            data_dir: "/home/ilur/data/CIFAR10"
+            training: false
+            batch_size: 500
+            shuffle: false
+            num_workers: 8
+
+quantization:
+    momentum: 1
+    weight:
+        enable: true
+        type: 
+        args:
+            n_bits: 2
+            signed: false
+    input:
+        enable: true
+        type: 
+        args:
+            n_bits: 2
+            signed: false
+    exclude_layers: ["conv1", "linear"]           # name of layers to exclude (with fp32 precision), regular expression supported
+    override_options:            # override options for some specified layers
+        - layers: []    # name of layers to override options, regular expression supported
+          options:
+              weight: {args: {n_bits: 8}}
+              input: {args: {n_bits: 8}}
+
+optimizer:
+    type: "SGD"               # name in torch.optim
+    args:
+        nesterov: true
+        lr: 0.01
+        weight_decay: 2.5e-5
+        momentum: 0.9
+loss: "cross_entropy_loss"               # name in trainer/loss
+metrics:                       # name in trainer/metrics
+    - "accuracy"
+    - "top5_acc"
+
+lr_scheduler:
+    type: "CosineDecayLR"
+    args:
+        total_epochs: 90
+        warmup_steps: 780
+
+grad_clip_param: 0
+
+alpha_lr: 1e-4
+
+trainer:
+    epochs: 90
+    save_dir: "saved/"
+    train_log_density: 3
+    valid_log_density: 1
+    save_period: 10
+    verbosity: 2
+    monitor: "max val_accuracy"
+    tensorboard: false
+    save_to_disk: false
+    freeze_bn: false

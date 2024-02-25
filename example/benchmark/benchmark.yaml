@@ -1,0 +1,53 @@
+# Instance name
+name: "Benchmark"
+
+# Run ID of the instance
+run_id: "Benchmark"
+
+# How many GPUs to train/test
+n_gpu: 2
+
+# Whether use DistributedDataParallel instead of DataParallel
+ddp: true
+
+# Whether to use cudnn
+cudnn: true
+
+# Training benchmark or Testing benchmark
+train: true
+
+# Assign the steps count per benchmark round. (Used in very large dataset like ImageNet)
+# steps: 50
+
+# Repeat benchmark round count per arch
+repeat: 3
+
+# Model
+arch:
+    - type: "resnet18"         # name in `model` package
+      args:
+          num_classes: 100
+
+# Dataloaders
+dataloader:
+    type: "Empty"                  # name in data_loader/data_loaders.py
+    args:
+        data_dir: "data/cifar100"
+        # data_dir: "/data/common_datasets/ILSVRC2012"
+        training: true
+        batch_size: 256
+        shuffle: true
+        drop_last: true
+        num_workers: 8
+
+# Options for training
+optimizer:
+    type: "SGD"               # name in torch.optim
+    args:
+        nesterov: true
+        lr: 0.01
+        weight_decay: 5e-4
+        momentum: 0.9
+
+# Loss function
+loss: "cross_entropy_loss"               # name in trainer/loss

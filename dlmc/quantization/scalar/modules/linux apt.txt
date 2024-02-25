@@ -1,0 +1,8 @@
+deb http://mirrors.zju.edu.cn/ubuntu xenial main universe restricted multiverse
+deb http://mirrors.zju.edu.cn/ubuntu xenial-security main universe restricted multiverse
+deb http://mirrors.zju.edu.cn/ubuntu xenial-updates main universe restricted multiverse
+deb http://mirrors.zju.edu.cn/ubuntu xenial-backports main universe restricted multiverse
+deb-src http://mirrors.zju.edu.cn/ubuntu xenial main universe restricted multiverse
+deb-src http://mirrors.zju.edu.cn/ubuntu xenial-security main universe restricted multiverse
+deb-src http://mirrors.zju.edu.cn/ubuntu xenial-updates main universe restricted multiverse
+deb-src http://mirrors.zju.edu.cn/ubuntu xenial-backports main universe restricted multiverse
